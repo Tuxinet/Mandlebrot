@@ -1,0 +1,25 @@
+/opt/JetBrains/apps/CLion/ch-0/172.4343.16/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/tuxinet/Documents/Prosjekter/mandlebrot
+CMake Warning at /opt/JetBrains/apps/CLion/ch-0/172.4343.16/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  /opt/JetBrains/apps/CLion/ch-0/172.4343.16/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  /opt/JetBrains/apps/CLion/ch-0/172.4343.16/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:11 (find_package)
+
+
+CMake Warning at /opt/JetBrains/apps/CLion/ch-0/172.4343.16/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  /opt/JetBrains/apps/CLion/ch-0/172.4343.16/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  /opt/JetBrains/apps/CLion/ch-0/172.4343.16/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:11 (find_package)
+
+
+-- Boost version: 1.65.1
+-- Found the following Boost libraries:
+--   system
+--   thread
+-- Found GMP: /usr/lib/libgmp.so
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/tuxinet/Documents/Prosjekter/mandlebrot/cmake-build-debug

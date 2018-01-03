@@ -10,6 +10,7 @@
 #include <boost/multiprecision/number.hpp>
 #include "Bitmap.h"
 #include <thread>
+#include <stdlib.h>
 #include <mutex>
 
 using namespace std;
@@ -25,27 +26,71 @@ custom_float startingOffset_x;
 custom_float endingOffset_x;
 custom_float zoomFactor;
 
-const string x_str = "-1.7687069531872665107195026392814306235258139295002977194556256258178403449259311946492525705135341365783015626091746124127633553564998154567954573665585325117119952433499858145623972454257441977707920519017714749037394368328598741933787973344329826735585131527420664060570517455598996272289702838148013780249146657159250536145050424325634364117494878708215622708608029486758359093373124868767128017856030188237184457363335619981487897715226284818824501748791852848168945501411819383098612269482764188298430857648872365348609596382751025743832470915600069716006302634890654151885480377223228088663246587578622618912359329149703020416622966572595604285854841815292147128466961063480174518758783556074946982657022173899469187218776757166741467940104096912337128831674480670949056596997443171241257034256321533936609890433562686875886764738220321788554803506347411761965898780647740077719716289104556218693463703676245706590057653334644526507718088121464145068313357515060563588867275351913354259897273";
-const string y_str = "0.0018686866862279881761306473079545815087381675832414495947164115594424058231219070805026760427478575088649834823179731306911976608370719809744633868290234509568164190354727292419681471360386554166495138079188264761841410646230443457612589349079231888102187459730260171860689777921861392670692659482196233928380740947582835082307883291013399788576542907631044256929318441886285791857702439222352470350976810008786212443061966628876668722537436013643113171876926769271934858701607290881838741479284870389058450255205035322778607972467865024568990055897951559466191499150928809590681727659963230610105407015930150993085869024936254296478480690929268677595326609497059510789509669398383439528128606345550393203323058221227141166550822251291135269159413497232199835774904713436261899881943913451284627119728428379720351199063354436496535433039375892005669047504286121327416180942130549008520116952461826560688134132523497397576298135134946882431111090921646140854528417535270191424755556737149996929864";
+const string x_str = "-1.99999448488549867428401441643683795102899538102902580324795342945604162962465026042603051902985842646249953510033412012870163506133527611316456992016236456776519655813990262063581327180660478125086264132681575110267264042604739834139915976095802882600062026461852230249626693722284748450711764388299183881389086081031315206905563519792902262181330947585192715453649151051779006232917721787959720694534229460433476498589098901844934596776620772627101970902762768835049777093575563159176047446122779786657620643652452659847712504583823630051458931326564147303538244150941484718807287471951353256718899707308282003779841446265147058161973704889532775078291061997199756543440639882852257856735592312514444936688337427366930467714251631082785568754403933698374918743560899948699557180802691110414289421888325009239671123407561148275175154779372502194822643235505761875407404451392480455";
+const string y_str = "0";
 const string startingOffset_x_str = "2";
-const string endingOffset_x_str = "1.3843972363826381531814689023957E-991";
+const string endingOffset_x_str = "1.3843972363826381531814689023957E-100";
+//const string endingOffset_x_str = "1.3843972363826381531814689023957E-991";
 const string zoomFactor_str = "0.98";
 
-const int size_x = 8;
-const int size_y = size_x;
+const int size_x = 64;
+const int size_y = size_x / 2;
 const int start_iter = 100000;
-const int end_iter = 2000000;
-const int THREAD_NUM = 4;
+const int end_iter = 15000;
+const int THREAD_NUM = 2;
 const int BASE = 10;
 const int PRECISION = 1;
-const int ITER = 50;
+const int ITER = 500;
 const float ITER_MOD = 64.5;
 const float ESCAPE_RADIUS = 2;
 int num_frames = 0;
 
 int pixels[size_x * size_y];
+int smoothPixels[size_x * size_y];
+int histogram[end_iter];
 mutex pixel_lock;
 
+
+
+bool sortfunc (int i,int j) { return (i<j); }
+
+int compareints (const void * a, const void * b)
+{
+    return ( *(int*)a - *(int*)b );
+}
+
+
+int getColorForIter(int iter) {
+
+    //return iter % 255;
+
+    auto pItemPot = (int)((int*) bsearch(&iter, smoothPixels, size_x * size_y, sizeof(int), compareints) - smoothPixels);
+
+    int index = 0;
+    for (int i = 0; i<size_x * size_y; i++)
+    {
+        if (smoothPixels[i] == iter) {
+            index = i;
+            break;
+        }
+    }
+
+    float scaled = (float)pItemPot / (size_x * size_y);
+    auto scaledIter = (int)(scaled * end_iter);
+
+    //return (int)(((float)smoothPixels[histogram[scaledIter]] / end_iter) * 255) ;
+
+
+    int lSum = 0;
+    for (int j = 0; j < iter; j++)
+    {
+        lSum += histogram[j];
+    }
+
+    return (int)((((float)lSum)/(size_x * size_y)) * 255);
+
+    return smoothPixels[(int)((((float)lSum)/(1)))];
+}
 
 void ComputeMandlebrot(int line)
 {
@@ -61,7 +106,7 @@ void ComputeMandlebrot(int line)
 
     escape_radius = sqrt(escape_radius);
 
-    currentOffset_y = currentOffset_x * (size_x_mpf / size_y_mpf);
+    currentOffset_y = currentOffset_x * (size_y_mpf / size_x_mpf);
 
     int maxIter = (int)(sqrt(2 * sqrt(abs(1 - sqrt(custom_float(5) / currentOffset_x)))) * ITER_MOD); // Takk gudene hos SO
 
@@ -137,10 +182,10 @@ void ComputeMandlebrot(int line)
 
         while (iter < maxIter)
         {
-
             xtemp = x_c * x_c - y_c * y_c + x0;
             y_c = two * x_c * y_c + y0;
             x_c = xtemp;
+
             iter++;
 
             if (abs(y_c) > escape_radius)
@@ -149,15 +194,43 @@ void ComputeMandlebrot(int line)
             }
         }
 
-        //cout << (int)col << "\n";
+        if ((clock() - start) / CLOCKS_PER_SEC / THREAD_NUM > 1)   // If rendering the pixel is taking longer than 1 second
+        {                                            // display a notification
+            printf("    Finished rendering (%d,%d)\n", xp, line);
+        }
+
+        //cout << iter << '\n';
 
         // Storing result in the pixel array
+
+        float len = (float)sqrt(x_c * x_c + y_c * y_c);
+        int smooth;
+
+
+        if (len >= 1)
+        {
+            smooth = iter - (int)(log((log(len)) / log(2)));
+        }
+        else {
+            smooth = iter;
+            cout << "ASDASD\n";
+        }
+
+
+        if (smooth > end_iter) smooth = end_iter;
+
         pixel_lock.lock();
-        pixels[xp + line * size_x] = iter;
+
+        histogram[smooth] += 1;
+        pixels[xp + line * size_x] = smooth;
+        smoothPixels[xp + line * size_x] = smooth;
+
         pixel_lock.unlock();
+
+        //cout << iter << '\n';
     }
 
-    printf("    %.8fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+    printf("    Rendered line %d %.2fs\n", line, (double)(clock() - tStart)/CLOCKS_PER_SEC / THREAD_NUM);
 }
 
 void WorkerThread( boost::shared_ptr< boost::asio::io_service > io_service )
@@ -201,19 +274,24 @@ void ComputeMandlebrotVideo()
     minIt = 40000000;
     maxIt = 0;
 
+    cout << "Building image...\n";
+
+    std::sort(smoothPixels, smoothPixels + size_x * size_y, sortfunc);
+
     for (int i = 0; i < size_x * size_y; i++)
     {
         iter = pixels[i];
         if (iter > maxIt) maxIt = iter;
         if (iter < minIt) minIt = iter;
     }
-
     for (int xi = 0; xi < size_x; xi++)
     {
         for (int yi = 0; yi < size_y; yi++)
         {
+
             iter = pixels[xi + yi * size_x];
-            uint8_t col = (uint8_t)(((float)(iter - minIt) / (float)(maxIt - minIt)) * 255);
+            //uint8_t col = (uint8_t)(((float)(iter - minIt) / (float)(maxIt - minIt)) * 255);
+            uint8_t  col = (uint8_t)getColorForIter(iter);
             b.setPixel(xi, yi, col, col, col);
         }
     }
@@ -242,7 +320,8 @@ int main()
     cout << "Starting mandlebrot set calculations..." << endl;
     clock_t tStart = clock();
     ComputeMandlebrotVideo();
-    printf("Execute time: %.8fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+    printf("Average time per pixel: %.8fms\n", (double)(clock() - tStart) / CLOCKS_PER_SEC / (size_x * size_y) * 1000);
+    printf("CPU-time: %.8fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
 
     return 0;
 }

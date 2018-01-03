@@ -1,0 +1,1 @@
+/usr/bin/c++   -std=c++11 -O3 -fPIC -O3 -DNDEBUG   CMakeFiles/Mandlebrot.dir/main.cpp.o CMakeFiles/Mandlebrot.dir/Bitmap.cpp.o  -o Mandlebrot /usr/lib/libboost_system.so /usr/lib/libboost_thread.so -lmpfr -lgmp 

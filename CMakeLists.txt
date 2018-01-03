@@ -4,6 +4,10 @@ project(Mandlebrot)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -fPIC")
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/Modules")
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+
 find_package(Boost 1.64.0 COMPONENTS system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
