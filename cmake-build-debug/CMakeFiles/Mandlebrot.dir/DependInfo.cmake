@@ -5,6 +5,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/home/tuxinet/Documents/Prosjekter/mandlebrot/Bitmap.cpp" "/home/tuxinet/Documents/Prosjekter/mandlebrot/cmake-build-debug/CMakeFiles/Mandlebrot.dir/Bitmap.cpp.o"
+  "/home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.cpp" "/home/tuxinet/Documents/Prosjekter/mandlebrot/cmake-build-debug/CMakeFiles/Mandlebrot.dir/Gradient.cpp.o"
   "/home/tuxinet/Documents/Prosjekter/mandlebrot/main.cpp" "/home/tuxinet/Documents/Prosjekter/mandlebrot/cmake-build-debug/CMakeFiles/Mandlebrot.dir/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")

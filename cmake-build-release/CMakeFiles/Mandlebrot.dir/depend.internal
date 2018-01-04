@@ -6,6 +6,10 @@ CMakeFiles/Mandlebrot.dir/Bitmap.cpp.o
  /home/tuxinet/Documents/Prosjekter/mandlebrot/Bitmap.h
  /home/tuxinet/Documents/Prosjekter/mandlebrot/BitmapFileHeader.h
  /home/tuxinet/Documents/Prosjekter/mandlebrot/BitmapInfoHeader.h
+CMakeFiles/Mandlebrot.dir/Gradient.cpp.o
+ /home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.cpp
+ /home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.h
 CMakeFiles/Mandlebrot.dir/main.cpp.o
  /home/tuxinet/Documents/Prosjekter/mandlebrot/Bitmap.h
+ /home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.h
  /home/tuxinet/Documents/Prosjekter/mandlebrot/main.cpp

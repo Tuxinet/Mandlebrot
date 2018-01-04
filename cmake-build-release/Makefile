@@ -150,6 +150,33 @@ Bitmap.cpp.s:
 	$(MAKE) -f CMakeFiles/Mandlebrot.dir/build.make CMakeFiles/Mandlebrot.dir/Bitmap.cpp.s
 .PHONY : Bitmap.cpp.s
 
+Gradient.o: Gradient.cpp.o
+
+.PHONY : Gradient.o
+
+# target to build an object file
+Gradient.cpp.o:
+	$(MAKE) -f CMakeFiles/Mandlebrot.dir/build.make CMakeFiles/Mandlebrot.dir/Gradient.cpp.o
+.PHONY : Gradient.cpp.o
+
+Gradient.i: Gradient.cpp.i
+
+.PHONY : Gradient.i
+
+# target to preprocess a source file
+Gradient.cpp.i:
+	$(MAKE) -f CMakeFiles/Mandlebrot.dir/build.make CMakeFiles/Mandlebrot.dir/Gradient.cpp.i
+.PHONY : Gradient.cpp.i
+
+Gradient.s: Gradient.cpp.s
+
+.PHONY : Gradient.s
+
+# target to generate assembly for a file
+Gradient.cpp.s:
+	$(MAKE) -f CMakeFiles/Mandlebrot.dir/build.make CMakeFiles/Mandlebrot.dir/Gradient.cpp.s
+.PHONY : Gradient.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -189,6 +216,9 @@ help:
 	@echo "... Bitmap.o"
 	@echo "... Bitmap.i"
 	@echo "... Bitmap.s"
+	@echo "... Gradient.o"
+	@echo "... Gradient.i"
+	@echo "... Gradient.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

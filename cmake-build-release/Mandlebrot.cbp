@@ -94,6 +94,12 @@
 		<Unit filename="/home/tuxinet/Documents/Prosjekter/mandlebrot/BitmapInfoHeader.h">
 			<Option target="Mandlebrot"/>
 		</Unit>
+		<Unit filename="/home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.cpp">
+			<Option target="Mandlebrot"/>
+		</Unit>
+		<Unit filename="/home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.h">
+			<Option target="Mandlebrot"/>
+		</Unit>
 		<Unit filename="/home/tuxinet/Documents/Prosjekter/mandlebrot/main.cpp">
 			<Option target="Mandlebrot"/>
 		</Unit>

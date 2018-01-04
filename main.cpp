@@ -12,6 +12,7 @@
 #include <thread>
 #include <stdlib.h>
 #include <mutex>
+#include "Gradient.h"
 
 using namespace std;
 using namespace boost::multiprecision;
@@ -26,17 +27,17 @@ custom_float startingOffset_x;
 custom_float endingOffset_x;
 custom_float zoomFactor;
 
-const string x_str = "-1.99999448488549867428401441643683795102899538102902580324795342945604162962465026042603051902985842646249953510033412012870163506133527611316456992016236456776519655813990262063581327180660478125086264132681575110267264042604739834139915976095802882600062026461852230249626693722284748450711764388299183881389086081031315206905563519792902262181330947585192715453649151051779006232917721787959720694534229460433476498589098901844934596776620772627101970902762768835049777093575563159176047446122779786657620643652452659847712504583823630051458931326564147303538244150941484718807287471951353256718899707308282003779841446265147058161973704889532775078291061997199756543440639882852257856735592312514444936688337427366930467714251631082785568754403933698374918743560899948699557180802691110414289421888325009239671123407561148275175154779372502194822643235505761875407404451392480455";
-const string y_str = "0";
+const string x_str = "-1.7685736563152709932817429153295447129341200534055498823375111352827765533646353820119779335363321986478087958745766432300344486098206084588445291690832853792608335811319613234806674959498380432536269122404488847453646628324959064543";
+const string y_str = "-0.0009642968513582800001762427203738194482747761226565635652857831533070475543666558930286153827950716700828887932578932976924523447497708248894734256480183898683164582055541842171815899305250842692638349057118793296768325124255746563";
 const string startingOffset_x_str = "2";
-const string endingOffset_x_str = "1.3843972363826381531814689023957E-100";
+const string endingOffset_x_str = "1.3843972363826381531814689023957E-4";
 //const string endingOffset_x_str = "1.3843972363826381531814689023957E-991";
 const string zoomFactor_str = "0.98";
 
-const int size_x = 64;
+const int size_x = 512;
 const int size_y = size_x / 2;
 const int start_iter = 100000;
-const int end_iter = 15000;
+const int end_iter = 500;
 const int THREAD_NUM = 2;
 const int BASE = 10;
 const int PRECISION = 1;
@@ -45,14 +46,19 @@ const float ITER_MOD = 64.5;
 const float ESCAPE_RADIUS = 2;
 int num_frames = 0;
 
-int pixels[size_x * size_y];
-int smoothPixels[size_x * size_y];
+double pixels[size_x * size_y];
+double smoothPixels[size_x * size_y];
 int histogram[end_iter];
 mutex pixel_lock;
 
 
+// Color gradient stuff
+Gradient::GradientColor black(0, 0, 0, 255);
 
-bool sortfunc (int i,int j) { return (i<j); }
+Gradient::Gradient<Gradient::GradientColor> colorGradient;
+
+
+bool sortfunc (double i,double j) { return (i<j); }
 
 int compareints (const void * a, const void * b)
 {
@@ -60,36 +66,19 @@ int compareints (const void * a, const void * b)
 }
 
 
-int getColorForIter(int iter) {
+Gradient::GradientColor getColorForIter(double iter) {
 
     //return iter % 255;
 
-    auto pItemPot = (int)((int*) bsearch(&iter, smoothPixels, size_x * size_y, sizeof(int), compareints) - smoothPixels);
+    if (iter > end_iter - 1) return black;
 
     int index = 0;
-    for (int i = 0; i<size_x * size_y; i++)
-    {
-        if (smoothPixels[i] == iter) {
-            index = i;
-            break;
-        }
-    }
 
-    float scaled = (float)pItemPot / (size_x * size_y);
-    auto scaledIter = (int)(scaled * end_iter);
+    index = (int)((double*)std::find_if(smoothPixels, smoothPixels + size_x * size_y , [iter](double b) { return abs(iter - b) < 0.000001; }) - smoothPixels);
 
-    //return (int)(((float)smoothPixels[histogram[scaledIter]] / end_iter) * 255) ;
+    float t = (float)index / (size_x * size_y);
 
-
-    int lSum = 0;
-    for (int j = 0; j < iter; j++)
-    {
-        lSum += histogram[j];
-    }
-
-    return (int)((((float)lSum)/(size_x * size_y)) * 255);
-
-    return smoothPixels[(int)((((float)lSum)/(1)))];
+    return colorGradient.getColorAt(t);
 }
 
 void ComputeMandlebrot(int line)
@@ -138,8 +127,8 @@ void ComputeMandlebrot(int line)
 
     int iter = 0;
 
-    custom_float x0(0);                               // Den reelle delen av det komplekse tallen
-    custom_float y0(0);                               // Den immaginære delen av det komplekse tallet
+    custom_float zRealStart(0);                               // Den reelle delen av det komplekse tallen
+    custom_float zImagStart(0);                               // Den immaginære delen av det komplekse tallet
 
     // Declaring some stuff I'm going to need in the loop
     custom_float xp_mpf(0);
@@ -149,10 +138,10 @@ void ComputeMandlebrot(int line)
     custom_float increment_step_y(0);
 
 
-    custom_float xtemp(0);
+    custom_float zRealNext(0);
     custom_float ytemp(0);
-    custom_float x_c(0);
-    custom_float y_c(0);
+    custom_float zReal(0);
+    custom_float zImag(0);
 
     custom_float two(2);
     custom_float four(4);
@@ -165,16 +154,16 @@ void ComputeMandlebrot(int line)
     avg_pixel_val = 0;
     for (int xp = 0; xp < size_x; xp++)
     {
-        x0 = minX + xp * increment_x;
-        y0 = minY + line * increment_y;
+        zRealStart = minX + xp * increment_x;
+        zImagStart = minY + line * increment_y;
 
-        oldX = x0;
-        oldY = y0;
+        oldX = zRealStart;
+        oldY = zImagStart;
 
-        x_c = custom_float(0);
-        y_c = custom_float(0);
+        zReal = custom_float(0);
+        zImag = custom_float(0);
 
-        xtemp = custom_float(0);
+        zRealNext = custom_float(0);
 
         iter = 0;
 
@@ -182,13 +171,13 @@ void ComputeMandlebrot(int line)
 
         while (iter < maxIter)
         {
-            xtemp = x_c * x_c - y_c * y_c + x0;
-            y_c = two * x_c * y_c + y0;
-            x_c = xtemp;
+            zRealNext = zReal * zReal - zImag * zImag + zRealStart;
+            zImag = two * zReal * zImag + zImagStart;
+            zReal = zRealNext;
 
             iter++;
 
-            if (abs(y_c) > escape_radius)
+            if (abs(zImag) > escape_radius)
             {
                 break;
             }
@@ -203,25 +192,17 @@ void ComputeMandlebrot(int line)
 
         // Storing result in the pixel array
 
-        float len = (float)sqrt(x_c * x_c + y_c * y_c);
-        int smooth;
+        float len = (float)sqrt(zReal * zReal + zImag * zImag);
+
+        double smooth;
 
 
-        if (len >= 1)
-        {
-            smooth = iter - (int)(log((log(len)) / log(2)));
-        }
-        else {
-            smooth = iter;
-            cout << "ASDASD\n";
-        }
-
-
-        if (smooth > end_iter) smooth = end_iter;
+        if (iter < maxIter)
+            smooth = (double)iter - (log((log(abs(len)))) / log(4));
+        else smooth = maxIter;
 
         pixel_lock.lock();
 
-        histogram[smooth] += 1;
         pixels[xp + line * size_x] = smooth;
         smoothPixels[xp + line * size_x] = smooth;
 
@@ -269,21 +250,12 @@ void ComputeMandlebrotVideo()
     threadpool.join_all();
 
     Bitmap b(size_x, size_y);
-    int iter, minIt, maxIt;
-
-    minIt = 40000000;
-    maxIt = 0;
+    double iter;
 
     cout << "Building image...\n";
 
     std::sort(smoothPixels, smoothPixels + size_x * size_y, sortfunc);
 
-    for (int i = 0; i < size_x * size_y; i++)
-    {
-        iter = pixels[i];
-        if (iter > maxIt) maxIt = iter;
-        if (iter < minIt) minIt = iter;
-    }
     for (int xi = 0; xi < size_x; xi++)
     {
         for (int yi = 0; yi < size_y; yi++)
@@ -291,8 +263,11 @@ void ComputeMandlebrotVideo()
 
             iter = pixels[xi + yi * size_x];
             //uint8_t col = (uint8_t)(((float)(iter - minIt) / (float)(maxIt - minIt)) * 255);
-            uint8_t  col = (uint8_t)getColorForIter(iter);
-            b.setPixel(xi, yi, col, col, col);
+            Gradient::GradientColor c = getColorForIter(iter);
+            uint8_t r = (uint8_t)(c.r * 255);
+            uint8_t g = (uint8_t)(c.g * 255);
+            uint8_t bl = (uint8_t)(c.b * 255);
+            b.setPixel(xi, yi, r, g, bl);
         }
     }
 
@@ -310,6 +285,13 @@ int main()
         return -1;
     }
      */
+
+    colorGradient.addColorStop(0, black);
+    colorGradient.addColorStop(0.16, Gradient::GradientColor(32, 107, 203, 255));
+    colorGradient.addColorStop(0.42, Gradient::GradientColor(237, 255, 255, 255));
+    colorGradient.addColorStop(0.6425, Gradient::GradientColor(255, 170, 0, 255));
+    colorGradient.addColorStop(0.8575, Gradient::GradientColor(0, 2, 0, 255));
+    colorGradient.addColorStop(1, Gradient::GradientColor(20, 68, 107, 255));
 
     x = custom_float(x_str);
     y = custom_float(y_str);
