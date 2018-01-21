@@ -26,6 +26,18 @@ memory
 
 /home/tuxinet/Documents/Prosjekter/mandlebrot/BitmapInfoHeader.h
 
+/home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.cpp
+Gradient.h
+/home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.h
+vector
+-
+
+/home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.h
+vector
+-
+math.h
+-
+
 /home/tuxinet/Documents/Prosjekter/mandlebrot/main.cpp
 iostream
 -
@@ -55,4 +67,6 @@ stdlib.h
 -
 mutex
 -
+Gradient.h
+/home/tuxinet/Documents/Prosjekter/mandlebrot/Gradient.h
 

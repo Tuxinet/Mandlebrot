@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(Mandlebrot)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -fPIC -lz -lpthread")
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/Modules")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")

@@ -30,11 +30,11 @@ custom_float zoomFactor;
 const string x_str = "-1.7685736563152709932817429153295447129341200534055498823375111352827765533646353820119779335363321986478087958745766432300344486098206084588445291690832853792608335811319613234806674959498380432536269122404488847453646628324959064543";
 const string y_str = "-0.0009642968513582800001762427203738194482747761226565635652857831533070475543666558930286153827950716700828887932578932976924523447497708248894734256480183898683164582055541842171815899305250842692638349057118793296768325124255746563";
 const string startingOffset_x_str = "2";
-const string endingOffset_x_str = "1.3843972363826381531814689023957E-4";
+const string endingOffset_x_str = "1.3843972363826381531814689023957E-10";
 //const string endingOffset_x_str = "1.3843972363826381531814689023957E-991";
 const string zoomFactor_str = "0.98";
 
-const int size_x = 512;
+const int size_x = 256;
 const int size_y = size_x / 2;
 const int start_iter = 100000;
 const int end_iter = 500;
@@ -44,6 +44,7 @@ const int PRECISION = 1;
 const int ITER = 500;
 const float ITER_MOD = 64.5;
 const float ESCAPE_RADIUS = 2;
+const double tollerance = 0.00000000000001;
 int num_frames = 0;
 
 double pixels[size_x * size_y];
@@ -60,9 +61,11 @@ Gradient::Gradient<Gradient::GradientColor> colorGradient;
 
 bool sortfunc (double i,double j) { return (i<j); }
 
-int compareints (const void * a, const void * b)
+int comparedoubles (const void * a, const void * b)
 {
-    return ( *(int*)a - *(int*)b );
+    if (abs(*(double*)a - *(double*)b) < tollerance) return 0;
+    else if (*(double*)a < *(double*)b) return -1;
+    else if (*(double*)a > *(double*)b) return 1;
 }
 
 
@@ -74,7 +77,11 @@ Gradient::GradientColor getColorForIter(double iter) {
 
     int index = 0;
 
-    index = (int)((double*)std::find_if(smoothPixels, smoothPixels + size_x * size_y , [iter](double b) { return abs(iter - b) < 0.000001; }) - smoothPixels);
+    double * item;
+    item = (double*) bsearch(&iter, smoothPixels, size_x * size_y, sizeof(double), comparedoubles);
+
+
+    index = (int)(item - smoothPixels);
 
     float t = (float)index / (size_x * size_y);
 
@@ -91,9 +98,10 @@ void ComputeMandlebrot(int line)
     custom_float size_x_mpf(size_x);
     custom_float size_y_mpf(size_y);
 
+    custom_float escape_radius_sqrt(ESCAPE_RADIUS);
     custom_float escape_radius(ESCAPE_RADIUS);
 
-    escape_radius = sqrt(escape_radius);
+    escape_radius_sqrt = sqrt(escape_radius_sqrt);
 
     currentOffset_y = currentOffset_x * (size_y_mpf / size_x_mpf);
 
@@ -142,6 +150,8 @@ void ComputeMandlebrot(int line)
     custom_float ytemp(0);
     custom_float zReal(0);
     custom_float zImag(0);
+    custom_float zRealOld = custom_float(0);
+    custom_float zImagOld = custom_float(0);
 
     custom_float two(2);
     custom_float four(4);
@@ -169,15 +179,19 @@ void ComputeMandlebrot(int line)
 
         clock_t start = clock();
 
+
         while (iter < maxIter)
         {
+            zRealOld = zReal;
+            zImagOld = zImag;
+
             zRealNext = zReal * zReal - zImag * zImag + zRealStart;
             zImag = two * zReal * zImag + zImagStart;
             zReal = zRealNext;
 
             iter++;
 
-            if (abs(zImag) > escape_radius)
+            if (abs(zImag) > escape_radius_sqrt)
             {
                 break;
             }
@@ -192,13 +206,13 @@ void ComputeMandlebrot(int line)
 
         // Storing result in the pixel array
 
-        float len = (float)sqrt(zReal * zReal + zImag * zImag);
+        custom_float len = sqrt(abs(zRealOld) * abs(zRealOld) + abs(zImagOld) * abs(zImagOld));
 
         double smooth;
 
 
         if (iter < maxIter)
-            smooth = (double)iter - (log((log(abs(len)))) / log(4));
+            smooth = (double)((double)iter + (double)1 - log(log(abs(len))) / log(escape_radius));
         else smooth = maxIter;
 
         pixel_lock.lock();
