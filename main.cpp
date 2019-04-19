@@ -29,12 +29,15 @@ custom_float zoomFactor;
 
 const string x_str = "-1.7685736563152709932817429153295447129341200534055498823375111352827765533646353820119779335363321986478087958745766432300344486098206084588445291690832853792608335811319613234806674959498380432536269122404488847453646628324959064543";
 const string y_str = "-0.0009642968513582800001762427203738194482747761226565635652857831533070475543666558930286153827950716700828887932578932976924523447497708248894734256480183898683164582055541842171815899305250842692638349057118793296768325124255746563";
+//const string x_str = "0";
+//const string y_str = "0";
+
 const string startingOffset_x_str = "2";
-const string endingOffset_x_str = "1.3843972363826381531814689023957E-10";
+const string endingOffset_x_str = "1.3843972363826381531814689023957E-5";
 //const string endingOffset_x_str = "1.3843972363826381531814689023957E-991";
 const string zoomFactor_str = "0.98";
 
-const int size_x = 256;
+const int size_x = 1024;
 const int size_y = size_x / 2;
 const int start_iter = 100000;
 const int end_iter = 500;
@@ -55,6 +58,7 @@ mutex pixel_lock;
 
 // Color gradient stuff
 Gradient::GradientColor black(0, 0, 0, 255);
+Gradient::GradientColor white(255, 255, 255, 255);
 
 Gradient::Gradient<Gradient::GradientColor> colorGradient;
 
@@ -73,17 +77,20 @@ Gradient::GradientColor getColorForIter(double iter) {
 
     //return iter % 255;
 
-    if (iter > end_iter - 1) return black;
+    if (iter > ITER - 1) return white;
 
     int index = 0;
 
     double * item;
     item = (double*) bsearch(&iter, smoothPixels, size_x * size_y, sizeof(double), comparedoubles);
 
-
     index = (int)(item - smoothPixels);
 
     float t = (float)index / (size_x * size_y);
+
+//    t = (float)iter / (float)ITER;
+
+  return Gradient::GradientColor(t * 255, t * 255, t * 255, 255);
 
     return colorGradient.getColorAt(t);
 }
@@ -191,7 +198,7 @@ void ComputeMandlebrot(int line)
 
             iter++;
 
-            if (abs(zImag) > escape_radius_sqrt)
+            if (zImag * zImag + zReal * zReal > escape_radius * escape_radius)
             {
                 break;
             }
@@ -206,21 +213,25 @@ void ComputeMandlebrot(int line)
 
         // Storing result in the pixel array
 
-        custom_float len = sqrt(abs(zRealOld) * abs(zRealOld) + abs(zImagOld) * abs(zImagOld));
+        custom_float len = sqrt(zReal * zReal + zImag * zImag);
 
         double smooth;
 
 
         if (iter < maxIter)
-            smooth = (double)((double)iter + (double)1 - log(log(abs(len))) / log(escape_radius));
+            smooth = (double)((double)iter - (log(log(len))/ log(2.0)));
+//   smooth = (double)((double)iter - log(log(len)/log(256.0))/log(2.0));
         else smooth = maxIter;
 
-        pixel_lock.lock();
+	if ((int) smooth - iter > 1)
+		printf("Original %d Smoothed %f\n", iter, smooth);
+
+        //pixel_lock.lock();
 
         pixels[xp + line * size_x] = smooth;
         smoothPixels[xp + line * size_x] = smooth;
 
-        pixel_lock.unlock();
+        //pixel_lock.unlock();
 
         //cout << iter << '\n';
     }
@@ -269,6 +280,12 @@ void ComputeMandlebrotVideo()
     cout << "Building image...\n";
 
     std::sort(smoothPixels, smoothPixels + size_x * size_y, sortfunc);
+
+    for (int i = 0; i < size_x * size_y - 1; i++)
+    {
+	if (comparedoubles(&smoothPixels[i], &smoothPixels[i+1]) != -1 && comparedoubles(&smoothPixels[i], &smoothPixels[i+1]) != 0)
+		printf("Sort not valid!\n");
+    }
 
     for (int xi = 0; xi < size_x; xi++)
     {

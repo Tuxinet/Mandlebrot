@@ -1,0 +1,3 @@
+/home/tuxinet/Documents/Mandlebrot/CMakeFiles/rebuild_cache.dir
+/home/tuxinet/Documents/Mandlebrot/CMakeFiles/Mandlebrot.dir
+/home/tuxinet/Documents/Mandlebrot/CMakeFiles/edit_cache.dir
